@@ -1,0 +1,64 @@
+{
+  "cluster_permissions": [
+    "cluster:monitor/*",
+    "cluster:admin/opendistro/ism/policy/get",
+    "cluster:admin/opendistro/ism/policy/write",
+    "cluster:admin/opendistro/ism/policy/search",
+    "cluster:admin/opendistro/ism/policy/delete",
+    "cluster:admin/opendistro/ism/managedindex/change",
+    "cluster:admin/opendistro/ism/managedindex/add",
+    "cluster:admin/opendistro/ism/managedindex/explain",
+    "indices:admin/index_template/*",
+    "indices:data/write/bulk",
+    "indices:admin/create",
+    "indices:admin/aliases",
+    "indices:admin/mapping/put",
+    "indices:admin/settings/update"
+  ],
+  "index_permissions": [
+    {
+      "index_patterns": [
+        ".opendistro*",
+        "semarchy*",
+        "billing*",
+        "billing-*"
+      ],
+      "allowed_actions": [
+        "read",
+        "write",
+        "manage"
+      ]
+    },
+    {
+      "index_patterns": [
+        "*"
+      ],
+      "allowed_actions": [
+        "indices:admin/aliases/get"
+      ]
+    },
+    {
+      "index_patterns": [
+        "log-explorer-*"
+      ],
+      "allowed_actions": [
+        "read",
+        "crud",
+        "indices:data/write/bulk",
+        "indices:data/write/index",
+        "indices:data/admin/get",
+        "indices:admin/get",
+        "indices:data/write/create",
+        "indices:data/read/search",
+        "indices:admin/aliases",
+        "indices:admin/create",
+        "indices:admin/rollover",
+        "indices:admin/aliases",
+        "indices:admin/write_alias",
+        "manage_aliases",
+        "indices:monitor/*",
+        "indices:admin/opensearch/ism/managedindex"
+      ]
+    }
+  ]
+}

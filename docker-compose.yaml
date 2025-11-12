@@ -1,0 +1,179 @@
+name: sdp-externals
+services:
+
+  # Postgres
+  postgres:
+    image: postgres:${POSTGRES_VERSION:-latest}
+    container_name: 'postgres'
+    restart: always
+    user: ${POSTGRES_ADMIN_USER}
+    environment:
+      POSTGRES_USER: ${POSTGRES_ADMIN_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_ADMIN_PASSWORD}
+      SDP_KEYCLOAK_PASSWORD: ${SDP_KEYCLOAK_PASSWORD}                # password for "keycloak" user"
+      SDP_DM_USER_PASSWORD: ${SDP_DM_USER_PASSWORD}                  # password for "selfhosted-dm-repo-user" read/write user
+      SDP_DM_USER_RO_PASSWORD: ${SDP_DM_USER_RO_PASSWORD}            # password for "selfhosted-dm-repo-user-ro" read-only user
+      SDP_DM_DATASOURCE_1_PASSWORD: ${SDP_DM_DATASOURCE_1_PASSWORD}  # password for "datasource-schema-1" user
+      SDP_DM_DATASOURCE_2_PASSWORD: ${SDP_DM_DATASOURCE_2_PASSWORD}  # password for "datasource-schema-2" user
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./postgres-setup/:/docker-entrypoint-initdb.d/
+    ports:
+      - 5432:5432
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready", "-U", "postgres"]
+      interval: 1s
+      timeout: 5s
+      retries: 10
+
+  # Postgres Web UI
+  adminer:
+    image: adminer:${POSTGRES_UI_VERSION:-latest}
+    container_name: 'adminer'
+    restart: always
+    ports:
+      - 8090:8080    
+
+  # OpenSearch - single node
+  opensearch:
+    image: opensearchproject/opensearch:${OPENSEARCH_VERSION:-latest}
+    container_name: opensearch
+    environment:
+      discovery.type: single-node
+      node.name: opensearch
+      plugins.security.ssl.http.enabled: false  # Allow HTTP for REST API
+      plugins.security.allow_default_init_securityindex: true
+      OPENSEARCH_JAVA_OPTS: -Xms512m -Xmx512m
+      OPENSEARCH_INITIAL_ADMIN_PASSWORD: ${OPENSEARCH_INITIAL_ADMIN_PASSWORD}
+    healthcheck:
+      test: ["CMD", "curl", "-k", "-s", "http://localhost:9200/_plugins/_security/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 60
+    volumes:
+      - opensearch-data:/usr/share/opensearch/data
+    ports:
+      - 9200:9200
+      - 9600:9600
+    networks:
+      - opensearch-net
+
+  # OpenSearch Dashboards UI
+  opensearch-dashboards:
+    image: opensearchproject/opensearch-dashboards:${OPENSEARCH_UI_VERSION:-latest} 
+    container_name: opensearch-dashboards
+    depends_on:
+      - opensearch
+    ports:
+      - 5601:5601 
+    expose:
+      - "5601" # Expose port 5601 for web access to OpenSearch Dashboards
+    environment:
+      OPENSEARCH_HOSTS: '["http://opensearch:9200"]' 
+    networks:
+      - opensearch-net
+
+  # OpenSearch initialisation via REST API calls 
+  opensearch-initialisation:
+    image: curlimages/curl:8.9.0
+    container_name: opensearch-init
+    depends_on:
+      opensearch:
+        condition: service_healthy
+    environment:
+      OPENSEARCH_URL: http://opensearch:9200
+      ADMIN_USER: ${OPENSEARCH_ADMIN_USER}
+      ADMIN_PASS: ${OPENSEARCH_INITIAL_ADMIN_PASSWORD}
+      SECURITY_ROLE_NAME: ${OPENSEARCH_SECURITY_ROLE_NAME}
+      INTERNAL_USER: ${OPENSEARCH_INTERNAL_USER}
+      INTERNAL_USER_PASS: ${OPENSEARCH_INTERNAL_USER_PASS}
+    command: ["/bin/sh","/init/initialise.sh"]
+    volumes:
+      - ./opensearch-setup:/init:ro
+    networks:
+      - opensearch-net
+      
+  # Kafka
+  kafka-broker:
+    image: bitnami/kafka:${KAFKA_VERSION:-latest}
+    hostname: kafka-broker
+    container_name: kafka-broker
+    ports:
+      - 9092:9092
+      - 9093:9093
+      - 9094:9094
+    environment:
+      # ---- KRaft (no ZooKeeper) ----
+      - KAFKA_ENABLE_KRAFT=yes
+      - KAFKA_CFG_PROCESS_ROLES=broker,controller
+      - KAFKA_CFG_NODE_ID=1
+      - KAFKA_KRAFT_CLUSTER_ID=abcdabcdabcdabcdabcdab  # any 22+ char base64-ish id is fine
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=1@kafka-broker:9093
+
+      # ---- Listeners ----
+      - KAFKA_CFG_LISTENERS=INTERNAL://:9092,CONTROLLER://:9093,SASL_PLAINTEXT://:9094
+      - KAFKA_CFG_ADVERTISED_LISTENERS=INTERNAL://kafka:9092,SASL_PLAINTEXT://localhost:9094
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=INTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT,SASL_PLAINTEXT:SASL_PLAINTEXT
+      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=INTERNAL
+
+      # ---- SASL/SCRAM (client auth) ----
+      - KAFKA_CFG_SASL_ENABLED_MECHANISMS=SCRAM-SHA-512
+      # Bitnami will create SCRAM credentials for these users automatically:
+      - KAFKA_CLIENT_USERS=devuser
+      - KAFKA_CLIENT_PASSWORDS=devpass123
+
+      # ---- (Optional) keep authorization simple for a dev box ----
+      - KAFKA_CFG_ALLOW_EVERYONE_IF_NO_ACL_FOUND=true
+    volumes:
+      - kafka-data:/bitnami/kafka
+    networks:
+      - kafka-net      
+
+  # A basic UI for Kafka
+  kafka-ui:
+    image: provectuslabs/kafka-ui:${KAFKA_UI_VERSION:-latest}
+    container_name: kafka-ui
+    ports:
+      - "8080:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka-broker:9092
+    depends_on:
+      - kafka-broker
+    networks:
+      - kafka-net      
+
+  # Initialise Kafka
+  
+  
+  
+  
+  # Mailpit for email testing
+  mailpit:
+    image: axllent/mailpit
+    container_name: mailpit
+    restart: unless-stopped
+    volumes:
+      - mailpit-data:/data
+    ports:
+      - 8025:8025   # Web UI
+      - 1025:1025   # SMTP
+    environment:
+      MP_MAX_MESSAGES: 5000
+      MP_DATABASE: /data/mailpit.db
+      MP_SMTP_AUTH_ACCEPT_ANY: 1
+      MP_SMTP_AUTH_ALLOW_INSECURE: 1
+      TZ: Europe/London
+
+
+
+volumes:
+  postgres-data:
+  kafka-data:
+  opensearch-data:
+  mailpit-data:
+
+networks:
+  opensearch-net:
+  kafka-net:
