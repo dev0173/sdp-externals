@@ -1,0 +1,103 @@
+global:
+    domain: "sdp.local" # Example: platform.company.net
+    externalProtocol: "https"
+    license:
+        body: "<YOUR-LICENSE-KEY>" # <<<=== Replace with your SDP license key
+    image:
+        registry: registry.na.semarchy.net
+    smartReload:
+        enable: false
+
+tenant-settings:
+    enabled: true
+    user_creation:
+        enabled: true
+        email: "<YOUR-EMAIL-ADDRESS>" # Replace with the email address of the first admin user
+        firstname: "<YOUR-FIRST-NAME>" # Replace with the given name of the first admin user
+        lastname: "<YOUR-SURNAME>" # Replace with the family name of the first admin user
+
+semarchy-iam:
+    keycloak:
+        rootDomain: "sdp.local" # Should match global.domain
+        ingress:
+            hostname: "sdp.local" # Should match global.domain
+            ingressClassName: "nginx" # Example: "nginx" or "traefik"
+        image:
+            repository: bitnamilegacy/keycloak
+        global:
+            security:
+                allowInsecureImages: true
+            production: true
+            proxyHeaders: xforwarded
+            extraEnvVars:
+                - name: KC_METRICS_ENABLED
+                  value: "true"
+                - name: KC_LOG
+                  value: console
+                - name: KC_LOG_CONSOLE_OUTPUT
+                  value: json
+                - name: KEYCLOAK_ENABLE_HEALTH_ENDPOINTS
+                  value: "true"
+            logging:
+                output: default
+                level: INFO
+        externalDatabase:
+            host: "host.docker.internal" # This should point to your PostgreSQL service
+            port: 5432
+
+log-explorer:
+    enabled: true
+    ingress:
+        hosts:
+            - host: "selfhosted.sdp.local" # Example: selfhosted.platform.company.net
+              paths:
+                  - path: /log-explorer
+                    pathType: ImplementationSpecific
+                    className: "nginx"
+    log-explorer-service:
+        replicaCount: 1
+
+user-profile:
+    ingress:
+        hosts:
+            - host: "selfhosted.sdp.local" # Example: selfhosted.platform.company.net
+              paths:
+                  - path: /user-profile
+                    pathType: ImplementationSpecific
+                    className: "nginx"
+
+site-admin:
+    ingress:
+        hosts:
+            - host: "selfhosted.sdp.local" # Example: selfhosted.platform.company.net
+              paths:
+                  - path: /admin
+                    pathType: ImplementationSpecific
+                    className: "nginx"
+
+welcome:
+    ingress:
+        hosts:
+            - host: "selfhosted.sdp.local" # Example: selfhosted.platform.company.net
+              paths:
+                  - path: /
+                    pathType: ImplementationSpecific
+                    className: "nginx"
+
+billing-service:
+    enabled: true
+    opensearch:
+        secret:
+            name: opensearch-provider
+
+dm:
+    core:
+        ingress:
+            className: "nginx"
+            hosts:
+                - host: "selfhosted.sdp.local" # Example: selfhosted.platform.company.net
+            active:
+                livenessProbe:
+                    initialDelaySeconds: 100
+                readinessProbe:
+                    initialDelaySeconds: 100
