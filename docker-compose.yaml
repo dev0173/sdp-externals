@@ -81,13 +81,13 @@ services:
       opensearch:
         condition: service_healthy
     environment:
-      OPENSEARCH_URL: http://opensearch:9200
       ADMIN_USER: ${OPENSEARCH_ADMIN_USER}
       ADMIN_PASS: ${OPENSEARCH_INITIAL_ADMIN_PASSWORD}
       SECURITY_ROLE_NAME: ${OPENSEARCH_SECURITY_ROLE_NAME}
       INTERNAL_USER: ${OPENSEARCH_INTERNAL_USER}
       INTERNAL_USER_PASS: ${OPENSEARCH_INTERNAL_USER_PASS}
     command: ["/bin/sh","/init/initialise.sh"]
+    restart: "no"
     volumes:
       - ./opensearch-setup:/init:ro
     networks:
@@ -127,43 +127,61 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
 
       # --- (Optional) simple authz for dev ---
-      KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "true"
 
       # --- Storage / cluster id ---
       KAFKA_LOG_DIRS: /var/lib/kafka/data
 
-      # Steve's additions aimed at getting this bastard thing to start successfully ... ChatGPT
+      # Steve's additions aimed at getting this bastard thing to start successfully ... ChatGPT made me do it
       KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/jaas.conf
-
+      KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "true"
+      KAFKA_SUPER_USERS: User:ANONYMOUS # Make ANONYMOUS a super-user for setup ease
+      KAFKA_AUTHORIZER_CLASS_NAME: org.apache.kafka.metadata.authorizer.StandardAuthorizer
     volumes:
       - kafka-data:/var/lib/kafka/data
       - ./kafka-setup/server-jaas.conf:/etc/kafka/jaas.conf:ro  # JAAS config for SASL/SCRAM 
     healthcheck:
-      test: ["CMD", "bash", "-lc", "kafka-broker-api-versions.sh --bootstrap-server localhost:9092 >/dev/null 2>&1"]
+      test: ["CMD", "bash", "-lc", "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092 >/dev/null 2>&1"]
       interval: 10s
       timeout: 5s
       retries: 20
     networks:
       - kafka-net      
 
-  # A basic UI for Kafka
+  # A basic UI for Kafka 
   kafka-ui:
     image: provectuslabs/kafka-ui:${KAFKA_UI_VERSION:-latest}
     container_name: kafka-ui
-    ports:
-      - "8080:8080"
+    depends_on:
+      kafka:
+        condition: service_healthy
     environment:
       KAFKA_CLUSTERS_0_NAME: local
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
-    depends_on:
-      - kafka
+    ports:
+      - "8080:8080"
     networks:
       - kafka-net      
 
-  # Initialise Kafka
-  
-  
-  
+  # Initialise Kafka - One-shot setup job: users, topics, ACLs 
+  kafka-initialisation:
+    image: apache/kafka:${KAFKA_VERSION:-latest}
+    container_name: kafka-init
+    depends_on:
+      kafka:
+        condition: service_healthy
+    environment:
+      KAFKA_URL: kafka:9092
+      KAFKA_DM_USER: ${KAFKA_DM_USER}
+      KAFKA_DM_PASSWORD: ${KAFKA_DM_PASSWORD}
+      KAFKA_KEYCLOAK_USER: ${KAFKA_KEYCLOAK_USER}
+      KAFKA_KEYCLOAK_PASSWORD: ${KAFKA_KEYCLOAK_PASSWORD}
+    entrypoint: ["/bin/bash","-lc"]
+    command: ["/init/initialise.sh"]
+    restart: "no"
+    volumes:
+      - ./kafka-setup:/init:ro
+    networks:
+      - kafka-net
   
   # Mailpit for email testing
   mailpit:

@@ -1,0 +1,23 @@
+name: kafka-setup
+services:
+
+  # Initialise Kafka - One-shot setup job: users, topics, ACLs 
+  kafka-initialisation:
+    image: apache/kafka:${KAFKA_VERSION:-latest}
+    container_name: kafka-init
+    environment:
+      KAFKA_URL: kafka:9092
+      KAFKA_DM_USER: ${KAFKA_DM_USER}
+      KAFKA_DM_PASSWORD: ${KAFKA_DM_PASSWORD}
+      KAFKA_KEYCLOAK_USER: ${KAFKA_KEYCLOAK_USER}
+      KAFKA_KEYCLOAK_PASSWORD: ${KAFKA_KEYCLOAK_PASSWORD}
+    entrypoint: ["/bin/bash","-lc"]
+    command: ["/init/initialise.sh"]
+    restart: "no"
+    volumes:
+      - ./kafka-setup:/init:ro
+    networks:
+      - kafka-net      
+
+networks:
+  kafka-net:

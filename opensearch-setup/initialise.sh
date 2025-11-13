@@ -1,7 +1,8 @@
-#!/usr/bin/env sh
-set -eu
+#!/usr/bin/env bash
+set -euo pipefail
 
-OPENSEARCH_URL="${OPENSEARCH_URL:-https://opensearch:9200}"
+
+OPENSEARCH_URL="${OPENSEARCH_URL:-http://opensearch:9200}"
 ADMIN_USER="${ADMIN_USER:-admin}"
 ADMIN_PASS="${ADMIN_PASS:?set ADMIN_PASS}"
 SECURITY_ROLE_NAME=${SECURITY_ROLE_NAME:-semarchy-data-platform}
