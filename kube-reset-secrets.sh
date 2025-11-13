@@ -10,6 +10,9 @@ fi
 # Load secrets from .env file
 source .env
 
+# Set the namespace (default to semarchy-sdp if not set)
+K8S_NAMESPACE=${K8S_NAMESPACE:-semarchy-sdp}
+
 # Delete the existing namespace
 kubectl delete namespaces ${K8S_NAMESPACE} --ignore-not-found=true
 
