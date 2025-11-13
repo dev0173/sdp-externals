@@ -17,7 +17,7 @@ services:
       SDP_DM_DATASOURCE_2_PASSWORD: ${SDP_DM_DATASOURCE_2_PASSWORD}  # password for "datasource-schema-2" user
     volumes:
       - postgres-data:/var/lib/postgresql/data
-      - ./postgres-setup/:/docker-entrypoint-initdb.d/
+      - ./postgres-setup/:/docker-entrypoint-initdb.d/  # Setup scripts execute automatically on first run
     ports:
       - 5432:5432
     healthcheck:
@@ -30,6 +30,8 @@ services:
   adminer:
     image: adminer:${POSTGRES_UI_VERSION:-latest}
     container_name: 'adminer'
+    environment:
+      ADMINER_DEFAULT_SERVER: 'postgres'
     restart: always
     ports:
       - 8090:8080    
@@ -82,10 +84,10 @@ services:
         condition: service_healthy
     environment:
       ADMIN_USER: ${OPENSEARCH_ADMIN_USER}
-      ADMIN_PASS: ${OPENSEARCH_INITIAL_ADMIN_PASSWORD}
+      ADMIN_PASSWORD: ${OPENSEARCH_INITIAL_ADMIN_PASSWORD}
       SECURITY_ROLE_NAME: ${OPENSEARCH_SECURITY_ROLE_NAME}
       INTERNAL_USER: ${OPENSEARCH_INTERNAL_USER}
-      INTERNAL_USER_PASS: ${OPENSEARCH_INTERNAL_USER_PASS}
+      INTERNAL_USER_PASSWORD: ${OPENSEARCH_INTERNAL_USER_PASSWORD}
     command: ["/bin/sh","/init/initialise.sh"]
     restart: "no"
     volumes:
