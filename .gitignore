@@ -1,3 +1,5 @@
 # Docker environment file
 .env
 values.yaml
+
+steve*
