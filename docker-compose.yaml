@@ -128,18 +128,18 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
 
-      # --- (Optional) simple authz for dev ---
-
       # --- Storage / cluster id ---
       KAFKA_LOG_DIRS: /var/lib/kafka/data
 
-      # Steve's additions aimed at getting this bastard thing to start successfully ... ChatGPT made me do it
+      # Steve's additions aimed at getting this stupid thing to start successfully
       KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/jaas.conf
       KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "true"
       KAFKA_SUPER_USERS: User:ANONYMOUS # Make ANONYMOUS a super-user for setup ease
       KAFKA_AUTHORIZER_CLASS_NAME: org.apache.kafka.metadata.authorizer.StandardAuthorizer
     volumes:
       - kafka-data:/var/lib/kafka/data
+      - kafka-data-secrets:/etc/kafka/secrets
+      - kafka-shared-config:/mnt/shared/config
       - ./kafka-setup/server-jaas.conf:/etc/kafka/jaas.conf:ro  # JAAS config for SASL/SCRAM 
     healthcheck:
       test: ["CMD", "bash", "-lc", "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092 >/dev/null 2>&1"]
@@ -181,6 +181,9 @@ services:
     command: ["/init/initialise.sh"]
     restart: "no"
     volumes:
+      - kafka-init:/var/lib/kafka/data
+      - kafka-init:/etc/kafka/secrets
+      - kafka-init:/mnt/shared/config
       - ./kafka-setup:/init:ro
     networks:
       - kafka-net
@@ -202,11 +205,12 @@ services:
       MP_SMTP_AUTH_ALLOW_INSECURE: 1
       TZ: Europe/London
 
-
-
 volumes:
   postgres-data:
   kafka-data:
+  kafka-data-secrets:
+  kafka-shared-config:
+  kafka-init:
   opensearch-data:
   mailpit-data:
 

@@ -28,3 +28,4 @@ this script check for a folder called `pod_details_<yyyymmdd>_<hhmmss>`.
 - A basic Postgres web UI is at https://localhost:8090
 - A basic Kafka web UI is at https://localhost:8080 
 - OpenSearch dashboards are available at https://localhost:5601
+- A minikube/kubernetes daskboard can be started by executing `minikube dashboards`
