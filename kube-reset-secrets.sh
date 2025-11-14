@@ -9,8 +9,9 @@ if ! kubectl version --request-timeout=5s >/dev/null 2>&1; then
     exit 1
 fi
 
-# Load secrets from .env file
+# Load secrets from .env files
 source .env
+source .env-harbor
 
 # Set the namespace (default to semarchy-sdp if not set)
 K8S_NAMESPACE=${K8S_NAMESPACE:-semarchy-sdp}
@@ -24,8 +25,8 @@ kubectl create namespace ${K8S_NAMESPACE}
 # Add a secret for Semarchy’s Harbor docker registry:
 kubectl create secret docker-registry semarchy-harbor \
     --docker-server=registry.na.semarchy.net \
-    --docker-username="${K8S_HARBOR_USER}" \
-    --docker-password="${K8S_HARBOR_PASSWORD}" \
+    --docker-username="${K8S_HARBOR_USER}" \            # from .env-harbor
+    --docker-password="${K8S_HARBOR_PASSWORD}" \        # from .env-harbor
     --namespace="${K8S_NAMESPACE}"
 
 # Add Postgres keycloak secret:
