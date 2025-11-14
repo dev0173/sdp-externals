@@ -1,6 +1,8 @@
 #!/bin/bash
 # Reset the Kubernetes namespace and recreate necessary secrets for Semarchy SDP
 
+set -euo pipefail
+
 # Exit if kubernetes is not available
 if ! kubectl version --request-timeout=5s >/dev/null 2>&1; then
     echo "Cannot reach the Kubernetes cluster. Is minikube started?" >&2
