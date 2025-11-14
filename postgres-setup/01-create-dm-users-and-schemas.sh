@@ -14,7 +14,7 @@ psql --variable=ON_ERROR_STOP=1 --username="${POSTGRES_USER}" --dbname="selfhost
   CREATE EXTENSION IF NOT EXISTS "uuid-ossp" with schema extensions;
   CREATE EXTENSION IF NOT EXISTS "fuzzystrmatch" with schema extensions;
 
-  CREATE USER "selfhosted-dm-repo-user-ro" WITH PASSWORD '${SDP_DM_USER_RO_PASSWORD}'; 
+  CREATE USER "selfhosted-dm-repo-user-ro" WITH PASSWORD '${SDP_DM_RO_USER_PASSWORD}'; 
   GRANT CONNECT ON DATABASE "selfhosted-dm" to "selfhosted-dm-repo-user-ro";
   ALTER ROLE "selfhosted-dm-repo-user-ro" SET search_path TO "\$user","selfhosted-dm-repo-user",public,extensions;
   GRANT USAGE ON SCHEMA "selfhosted-dm-repo-user" TO "selfhosted-dm-repo-user-ro";
