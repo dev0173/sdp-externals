@@ -22,11 +22,11 @@ kubectl delete namespaces ${K8S_NAMESPACE} --ignore-not-found=true
 # Create a namespace:
 kubectl create namespace ${K8S_NAMESPACE}
 
-# Add a secret for Semarchy’s Harbor docker registry:
+# Add a secret for Semarchy’s Harbor docker registry. Uses .env-harbor for credentials.
 kubectl create secret docker-registry semarchy-harbor \
     --docker-server=registry.na.semarchy.net \
-    --docker-username="${K8S_HARBOR_USER}" \            # from .env-harbor
-    --docker-password="${K8S_HARBOR_PASSWORD}" \        # from .env-harbor
+    --docker-username="${K8S_HARBOR_USER}" \
+    --docker-password="${K8S_HARBOR_PASSWORD}" \
     --namespace="${K8S_NAMESPACE}"
 
 # Add Postgres keycloak secret:
@@ -105,8 +105,8 @@ kubectl create secret generic mail-secret \
     --from-literal=smtpPort="1025" \
     --from-literal=smtpStartTls="false" \
     --from-literal=smtpSsl="false" \
-    --from-literal=smtpAuth="true" \
-    --from-literal=smtpPassword="none" \
+    --from-literal=smtpAuth="false" \
+    --from-literal=smtpPassword="" \
     --namespace="${K8S_NAMESPACE}"
 
 # List the secrets
