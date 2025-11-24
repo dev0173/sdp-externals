@@ -1,5 +1,5 @@
 #!/bin/bash
-# Reset the docker environment by stopping and deleteing the containers, and deleting the volumes
+# Reset the docker environment by stopping and deleting the containers, and deleting the volumes
 
 set -euo pipefail
 
