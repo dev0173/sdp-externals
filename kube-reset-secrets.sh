@@ -74,14 +74,14 @@ kubectl create secret generic dm-postgres-datasource-2 \
 kubectl create secret generic kafka-keycloak \
     --from-literal=admin-username="keycloak" \
     --from-literal=admin-password="${KAFKA_KEYCLOAK_PASSWORD}" \
-    --from-literal=bootstrap-servers="host.docker.internal:9094" \
+    --from-literal=bootstrap-servers="host.docker.internal:9095" \
     --from-literal=sasl-jaas-config="org.apache.kafka.common.security.scram.ScramLoginModule required username=\"keycloak\" password=\"${KAFKA_KEYCLOAK_PASSWORD}\";" \
     --from-literal=security-protocol="SASL_PLAINTEXT" \
     --namespace="${K8S_NAMESPACE}"
 
 # Add a secret for Kafka DM:
 kubectl create secret generic dm-kafka \
-    --from-literal=bootstrap-servers="host.docker.internal:9094" \
+    --from-literal=bootstrap-servers="host.docker.internal:9095" \
     --from-literal=username="selfhosted-dm" \
     --from-literal=password="${KAFKA_DM_PASSWORD}" \
     --from-literal=sasl-jaas-config="org.apache.kafka.common.security.scram.ScramLoginModule required username=\"selfhosted-dm\" password=\"${KAFKA_DM_PASSWORD}\";" \

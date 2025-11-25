@@ -58,7 +58,7 @@ services:
       - 9200:9200
       - 9600:9600
     networks:
-      - opensearch-net
+      - sdp-local-network
 
   # OpenSearch Dashboards UI
   opensearch-dashboards:
@@ -73,7 +73,7 @@ services:
     environment:
       OPENSEARCH_HOSTS: '["http://opensearch:9200"]' 
     networks:
-      - opensearch-net
+      - sdp-local-network
 
   # OpenSearch initialisation via REST API calls 
   opensearch-initialisation:
@@ -93,61 +93,48 @@ services:
     volumes:
       - ./opensearch-setup:/init:ro
     networks:
-      - opensearch-net
+      - sdp-local-network
       
   # Kafka
   kafka:
-    image: apache/kafka:${KAFKA_VERSION:-latest}
-    hostname: kafka
+    image: bitnamilegacy/kafka:${BITNAMI_KAFKA_VERSION:-latest}
     container_name: kafka
-    ports:
-      - 9092:9092
-      - 9093:9093
-      - 9094:9094     # SASL_PLAINTEXT for clients
     environment:
-      # --- KRaft (no ZooKeeper) ---
-      KAFKA_PROCESS_ROLES: broker,controller
-      KAFKA_NODE_ID: 1
-      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
-      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
-#      KAFKA_CLUSTER_ID: MkJpS0pYS1hZb3h0Q3JhZnQx  # # any 22+ char base64-ish id is fine
+      KAFKA_ENABLE_KRAFT: yes
+      KAFKA_HEAP_OPTS: -Djavax.net.debug=ssl
+#      KAFKA_HEAP_OPTS: -Xmx8G -Xms8G -Djavax.net.debug=ssl
+#      KAFKA_KRAFT_CLUSTER_ID: ZmYxNjBiYTE0YmQ4NDFhZm
+      KAFKA_CFG_NODE_ID: 0
+      KAFKA_CFG_PROCESS_ROLES: 'broker, controller'
+      KAFKA_CFG_SASL_ENABLED_MECHANISMS: PLAIN,SCRAM-SHA-512
+      KAFKA_CFG_LISTENERS: BROKER://:9092,CONTROLLER://:9093,INTERNAL://:9094,EXTERNAL://:9095
+      KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: BROKER:PLAINTEXT,CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT,EXTERNAL:SASL_PLAINTEXT
+      KAFKA_CFG_ADVERTISED_LISTENERS: BROKER://kafka:9092,INTERNAL://kafka:9094,EXTERNAL://localhost:9095
+      KAFKA_CFG_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: '0@kafka:9093'
+      KAFKA_CFG_SASL_MECHANISM_CONTROLLER_PROTOCOL: PLAIN
+      KAFKA_CFG_SASL_MECHANISM_INTER_BROKER_PROTOCOL: PLAIN
+      KAFKA_CFG_INTER_BROKER_LISTENER_NAME: BROKER
+      KAFKA_CLIENT_LISTENER_NAME: EXTERNAL
+      #KAFKA_CFG_LISTENER_NAME_EXTERNAL_PLAIN_SASL_JAAS_CONFIG: org.apache.kafka.common.security.plain.PlainLoginModule required username="kafka1" password="kafka1" user_kafka1="kafka1";
+      #KAFKA_CFG_LISTENER_NAME_EXTERNAL_SCRAM-SHA-512_SASL_JAAS_CONFIG: org.apache.kafka.common.security.scram.ScramLoginModule required username="kafka2" password="kafka2" user_kafka1="kafka2";
+      KAFKA_CLIENT_USERS: "kafkaadmin"
+      KAFKA_CLIENT_PASSWORDS: "kafkaadm1n"
+      KAFKA_CFG_SUPER_USERS: "User:kafkaadmin;User:ANONYMOUS"
+      KAFKA_CFG_AUTHORIZER_CLASS_NAME: "org.apache.kafka.metadata.authorizer.StandardAuthorizer"
 
-      # --- Listeners ---
-      KAFKA_LISTENERS: INTERNAL://:9092,CONTROLLER://:9093,SASL_PLAINTEXT://:9094
-      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:9092,SASL_PLAINTEXT://localhost:9094
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT,SASL_PLAINTEXT:SASL_PLAINTEXT
-      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
-
-      # --- SASL/SCRAM (client auth) ---
-      KAFKA_SASL_ENABLED_MECHANISMS: SCRAM-SHA-512
-      # (Listener-scoped enablement to be explicit)
-      KAFKA_LISTENER_NAME_SASL__PLAINTEXT_SASL_ENABLED_MECHANISMS: SCRAM-SHA-512
-
-      # --- Dev-friendly replication settings for single node ---
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
-      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
-
-      # --- Storage / cluster id ---
-      KAFKA_LOG_DIRS: /var/lib/kafka/data
-
-      # Steve's additions aimed at getting this stupid thing to start successfully
-      KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/jaas.conf
-      KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "true"
-      KAFKA_SUPER_USERS: User:ANONYMOUS # Make ANONYMOUS a super-user for setup ease
-      KAFKA_AUTHORIZER_CLASS_NAME: org.apache.kafka.metadata.authorizer.StandardAuthorizer
-    volumes:
-      - kafka-data:/var/lib/kafka/data
-      - kafka-data-secrets:/etc/kafka/secrets
-      - kafka-shared-config:/mnt/shared/config
-      - ./kafka-setup/server-jaas.conf:/etc/kafka/jaas.conf:ro  # JAAS config for SASL/SCRAM 
     healthcheck:
-      test: ["CMD", "bash", "-lc", "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092 >/dev/null 2>&1"]
-      interval: 10s
-      timeout: 5s
-      retries: 20
+      test: ["CMD-SHELL", "kafka-broker-api-versions.sh --bootstrap-server kafka:9092 || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 10s
     networks:
-      - kafka-net      
+      - sdp-local-network
+    ports:
+      - '9095:9095'
+    volumes:
+      - kafka-data:/bitnami/kafka
 
   # A basic UI for Kafka 
   kafka-ui:
@@ -162,11 +149,11 @@ services:
     ports:
       - "8080:8080"
     networks:
-      - kafka-net      
+      - sdp-local-network      
 
   # Initialise Kafka - One-shot setup job: users, topics, ACLs 
   kafka-initialisation:
-    image: apache/kafka:${KAFKA_VERSION:-latest}
+    image: bitnamilegacy/kafka:${BITNAMI_KAFKA_VERSION:-latest}
     container_name: kafka-init
     depends_on:
       kafka:
@@ -181,12 +168,10 @@ services:
     command: ["/init/initialise.sh"]
     restart: "no"
     volumes:
-      - kafka-init:/var/lib/kafka/data
-      - kafka-init:/etc/kafka/secrets
-      - kafka-init:/mnt/shared/config
+      - kafka-data:/bitnami/kafka
       - ./kafka-setup:/init:ro
     networks:
-      - kafka-net
+      - sdp-local-network
   
   # Mailpit for email testing
   mailpit:
@@ -208,12 +193,10 @@ services:
 volumes:
   postgres-data:
   kafka-data:
-  kafka-data-secrets:
-  kafka-shared-config:
-  kafka-init:
   opensearch-data:
   mailpit-data:
 
 networks:
-  opensearch-net:
-  kafka-net:
+  sdp-local-network:
+    driver: bridge
+  

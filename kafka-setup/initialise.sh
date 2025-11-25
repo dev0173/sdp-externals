@@ -9,11 +9,12 @@ KAFKA_KEYCLOAK_USER="${KAFKA_KEYCLOAK_USER:-keycloak}"
 KAFKA_KEYCLOAK_PASSWORD="${KAFKA_KEYCLOAK_PASSWORD:?set KAFKA_KEYCLOAK_PASSWORD}"
 
 # Make Kafka CLI tools available
-KAFKA_BIN="${KAFKA_BIN:-/opt/kafka/bin}"
+KAFKA_BIN="${KAFKA_BIN:-/opt/bitnami/kafka/bin}"
 export PATH="$KAFKA_BIN:$PATH"
 
-echo "===> Waiting for Kafka on [${KAFKA_URL}] ...";
-kafka-broker-api-versions.sh --bootstrap-server ${KAFKA_URL} --version;
+echo "===> Configuring Kafka - ${KAFKA_URL} ...";
+KAFKA_VERSION=$(kafka-broker-api-versions.sh --bootstrap-server ${KAFKA_URL} --version);
+echo "Kafka version: ${KAFKA_VERSION}";
 
 echo "===> Creating SCRAM users for DM and keycloak";
 kafka-configs.sh --bootstrap-server ${KAFKA_URL} --alter --entity-type users --entity-name ${KAFKA_DM_USER} \
