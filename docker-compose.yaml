@@ -29,7 +29,7 @@ services:
   # Postgres Web UI
   adminer:
     image: adminer:${POSTGRES_UI_VERSION:-latest}
-    container_name: 'adminer'
+    container_name: postgres-ui
     environment:
       ADMINER_DEFAULT_SERVER: 'postgres'
     restart: always
