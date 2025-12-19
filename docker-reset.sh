@@ -11,3 +11,5 @@ docker volume rm \
   sdp-externals_mailpit-data \
   sdp-externals_opensearch-data 
   
+echo "Reset complete. Don't forget to 'docker compose up -d' if you want the containers back again!"
+
