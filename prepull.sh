@@ -15,7 +15,7 @@ eval "$(minikube docker-env)"
 
 # 2. Render Helm templates locally
 echo "[*] Rendering Helm chart version $CHART_VERSION ..."
-helm template "$RELEASE_NAME" "$CHART_PATH" --version "$CHART_VERSION" --values "../$VALUES_FILE" > /tmp/rendered.yaml
+helm template "$RELEASE_NAME" "$CHART_PATH" --version "$CHART_VERSION" --values "$VALUES_FILE" > /tmp/rendered.yaml
 
 # 3. Extract unique images (requires yq v4)
 echo "[*] Extracting image list ..."
