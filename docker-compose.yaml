@@ -17,7 +17,7 @@ services:
       SDP_DM_DATASOURCE_2_PASSWORD: ${SDP_DM_DATASOURCE_2_PASSWORD}  # password for "datasource-schema-2" user
     volumes:
       - postgres-data:/var/lib/postgresql/data
-      - ./postgres-setup/:/docker-entrypoint-initdb.d/  # Setup scripts execute automatically on first run
+      - ./docker-setup/postgres/:/docker-entrypoint-initdb.d/  # Setup scripts execute automatically on first run
     ports:
       - 5432:5432
     healthcheck:
@@ -91,7 +91,7 @@ services:
     command: ["/bin/sh","/init/initialise.sh"]
     restart: "no"
     volumes:
-      - ./opensearch-setup:/init:ro
+      - ./docker-setup/opensearch:/init:ro
     networks:
       - sdp-local-network
       
@@ -170,7 +170,7 @@ services:
     restart: "no"
     volumes:
       - kafka-data:/bitnami/kafka
-      - ./kafka-setup:/init:ro
+      - ./docker-setup/kafka:/init:ro
     networks:
       - sdp-local-network
   

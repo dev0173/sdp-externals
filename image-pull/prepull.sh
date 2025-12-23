@@ -6,7 +6,7 @@
 RELEASE_NAME="beta5"
 CHART_VERSION="1.0.0-beta.5"
 CHART_PATH="oci://registry.na.semarchy.net/semarchy-release/semarchy-data-platform"
-VALUES_FILE="${1:-../values.yaml}"
+VALUES_FILE="${1:-values.yaml}"
 NAMESPACE="semarchy-sdp"
 
 # 1. Point Docker CLI at minikube's Docker daemon
@@ -15,7 +15,7 @@ eval "$(minikube docker-env)"
 
 # 2. Render Helm templates locally
 echo "[*] Rendering Helm chart version $CHART_VERSION ..."
-helm template "$RELEASE_NAME" "$CHART_PATH" --version "$CHART_VERSION" --values "$VALUES_FILE" > /tmp/rendered.yaml
+helm template "$RELEASE_NAME" "$CHART_PATH" --version "$CHART_VERSION" --values "../$VALUES_FILE" > /tmp/rendered.yaml
 
 # 3. Extract unique images (requires yq v4)
 echo "[*] Extracting image list ..."
