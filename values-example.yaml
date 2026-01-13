@@ -1,103 +1,112 @@
 global:
-    domain: "sdp.local" # Example: platform.company.net
+    # `global.domain` is the main DNS domain used for all ingress hosts and for app access.
+    # When performing a local installation, declare this domain in /etc/hosts as well.
+    # Example: platform.company.net
+    domain: "<YOUR_GLOBAL_DOMAIN>"
+    # Protocol used for external URLs
     externalProtocol: "https"
     license:
-        body: "<YOUR-LICENSE-KEY>" # <<<=== Replace with your SDP license key
+        # Your license key for the Semarchy Data Platform
+        body: "<YOUR_LICENSE_KEY_HERE>"
     image:
+        # Container registry for Semarchy Data Platform images
         registry: registry.na.semarchy.net
     smartReload:
         enable: false
-
+    logCollector:
+        tls: "on"
+        tls_verify: "on"
 tenant-settings:
     enabled: true
     user_creation:
         enabled: true
-        email: "<YOUR-EMAIL-ADDRESS>" # Replace with the email address of the first admin user
-        firstname: "<YOUR-FIRST-NAME>" # Replace with the given name of the first admin user
-        lastname: "<YOUR-SURNAME>" # Replace with the family name of the first admin user
-
+        # Email address of the first admin user
+        email: "<YOUR_EMAIL_ADDRESS>"
+        # Given name of the first admin user
+        firstname: "<YOUR_FIRSTNAME>"
+        # Family name of the first admin user
+        lastname: "<YOUR_LASTNAME>"
 semarchy-iam:
+    logCollector:
+        tls: "on"
+        tlsVerify: "on"
     keycloak:
-        rootDomain: "sdp.local" # Should match global.domain
-        ingress:
-            hostname: "sdp.local" # Should match global.domain
-            ingressClassName: "nginx" # Example: "nginx" or "traefik"
-        image:
-            repository: bitnamilegacy/keycloak
-        global:
-            security:
-                allowInsecureImages: true
-            production: true
+        config:
+            spi:
+                eventsListenerKafkaEventListenerPropertiesSecurityProtocol: "SASL_SSL"
+            # TLS is terminated at the reverse proxy (e.g. Nginx).
+            # Keycloak receives HTTP traffic internally and relies on X-Forwarded-* headers
+            # to generate correct HTTPS URLs and secure cookies.
+            # Ref documentation: https://www.keycloak.org/server/reverseproxy        
+            # Browser â”€â”€ HTTPS â”€â”€> Reverse proxy (like Nginx) â”€â”€ HTTP â”€â”€> Keycloak
             proxyHeaders: xforwarded
-            extraEnvVars:
-                - name: KC_METRICS_ENABLED
-                  value: "true"
-                - name: KC_LOG
-                  value: console
-                - name: KC_LOG_CONSOLE_OUTPUT
-                  value: json
-                - name: KEYCLOAK_ENABLE_HEALTH_ENDPOINTS
-                  value: "true"
-            logging:
-                output: default
-                level: INFO
-        externalDatabase:
-            host: "host.docker.internal" # This should point to your PostgreSQL service
-            port: 5432
-
+            kcHttpEnabled: true                
+    ingresses:
+        ingress:
+        - name: sdp-keycloak
+          # Class name of the ingress provider. Example: "nginx" or "traefik"
+          className: "<YOUR_INGRESS_CLASS_NAME>"
 log-explorer:
     enabled: true
     ingress:
         hosts:
-            - host: "selfhosted.sdp.local" # Example: selfhosted.platform.company.net
+            # Hostname for the Log Explorer UI. Example: selfhosted.platform.company.net
+            - host: "selfhosted.<YOUR_GLOBAL_DOMAIN>"
               paths:
                   - path: /log-explorer
                     pathType: ImplementationSpecific
-                    className: "nginx"
+                    className: "<YOUR_INGRESS_CLASS_NAME>"
     log-explorer-service:
+        # Number of replicas for the Log Explorer service
         replicaCount: 1
-
 user-profile:
     ingress:
         hosts:
-            - host: "selfhosted.sdp.local" # Example: selfhosted.platform.company.net
+            # Hostname for the User Profile service. Example: selfhosted.platform.company.net
+            - host: "selfhosted.<YOUR_GLOBAL_DOMAIN>"
               paths:
                   - path: /user-profile
                     pathType: ImplementationSpecific
-                    className: "nginx"
-
+                    className: "<YOUR_INGRESS_CLASS_NAME>"
 site-admin:
     ingress:
         hosts:
-            - host: "selfhosted.sdp.local" # Example: selfhosted.platform.company.net
+            # Hostname for the Site Admin service. Example: selfhosted.platform.company.net
+            - host: "selfhosted.<YOUR_GLOBAL_DOMAIN>"
               paths:
                   - path: /admin
                     pathType: ImplementationSpecific
-                    className: "nginx"
-
+                    className: "<YOUR_INGRESS_CLASS_NAME>"
 welcome:
     ingress:
         hosts:
-            - host: "selfhosted.sdp.local" # Example: selfhosted.platform.company.net
+            # Hostname for the Welcome service. Example: selfhosted.platform.company.net
+            - host: "selfhosted.<YOUR_GLOBAL_DOMAIN>"
               paths:
                   - path: /
                     pathType: ImplementationSpecific
-                    className: "nginx"
-
+                    className: "<YOUR_INGRESS_CLASS_NAME>"
 billing-service:
     enabled: true
     opensearch:
         secret:
+            # Name of the Kubernetes secret for the OpenSearch connection
             name: opensearch-provider
-
 dm:
     core:
         ingress:
-            className: "nginx"
+            # Class name of the ingress provider. Example: "nginx" or "traefik"
+            className: "<YOUR_INGRESS_CLASS_NAME>"
             hosts:
-                - host: "selfhosted.sdp.local" # Example: selfhosted.platform.company.net
+                # Hostname for the Data Management core service. Example: selfhosted.platform.company.net
+                - host: "selfhosted.<YOUR_GLOBAL_DOMAIN>"
             active:
                 livenessProbe:
+                    # Initial delay for liveness probe (seconds)
                     initialDelaySeconds: 100
                 readinessProbe:
+                    # Initial delay for readiness probe (seconds)
                     initialDelaySeconds: 100
+    logCollector:
+        tls: "on"
+        tls_verify: "on"
