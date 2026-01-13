@@ -3,8 +3,8 @@
 
 # Pull all images names in the Helm chart into minikube's Docker daemon
 
-RELEASE_NAME="beta5"
-CHART_VERSION="1.0.0-beta.5"
+RELEASE_NAME="sdp"
+CHART_VERSION="1.0.0"
 CHART_PATH="oci://registry.na.semarchy.net/semarchy-release/semarchy-data-platform"
 VALUES_FILE="${1:-values.yaml}"
 NAMESPACE="semarchy-sdp"
