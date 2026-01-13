@@ -1,3 +1,5 @@
+# For GA release 1.0.0
+
 ## Docker setup of external systems required by SDP
 
 First task:
