@@ -53,7 +53,7 @@ kubectl create secret generic dm-postgres \
 # Add a secret for data source 1:
 kubectl create secret generic dm-postgres-datasource-1 \
     --from-literal=semarchy-role="datasource-schema-1" \
-    --from-literal=semarchy-password="datasource-1" \
+    --from-literal=semarchy-password="${SDP_DM_DATASOURCE_1_PASSWORD}" \
     --from-literal=database-port="5432" \
     --from-literal=database-name="selfhosted-dm" \
     --from-literal=database-host="host.docker.internal" \
@@ -63,7 +63,7 @@ kubectl create secret generic dm-postgres-datasource-1 \
 # Add a secret for data source 2:
 kubectl create secret generic dm-postgres-datasource-2 \
     --from-literal=semarchy-role="datasource-schema-2" \
-    --from-literal=semarchy-password="datasource-2" \
+    --from-literal=semarchy-password="${SDP_DM_DATASOURCE_2_PASSWORD}" \
     --from-literal=database-port="5432" \
     --from-literal=database-name="selfhosted-dm" \
     --from-literal=database-host="host.docker.internal" \
@@ -72,11 +72,8 @@ kubectl create secret generic dm-postgres-datasource-2 \
 
 # Add a secret for Kafka keycloak:
 kubectl create secret generic kafka-keycloak \
-    --from-literal=admin-username="keycloak" \
-    --from-literal=admin-password="${KAFKA_KEYCLOAK_PASSWORD}" \
     --from-literal=bootstrap-servers="host.docker.internal:9095" \
     --from-literal=sasl-jaas-config="org.apache.kafka.common.security.scram.ScramLoginModule required username=\"keycloak\" password=\"${KAFKA_KEYCLOAK_PASSWORD}\";" \
-    --from-literal=security-protocol="SASL_PLAINTEXT" \
     --namespace="${K8S_NAMESPACE}"
 
 # Add a secret for Kafka DM:
@@ -101,6 +98,7 @@ kubectl create secret generic opensearch-provider \
 # Add SMTP connection secret:
 kubectl create secret generic mail-secret \
     --from-literal=smtpUser="sdp@sdp.selfhosted.com" \
+    --from-literal=smtpFrom="sdp@sdp.selfhosted.com" \
     --from-literal=smtpHost="host.docker.internal" \
     --from-literal=smtpPort="1025" \
     --from-literal=smtpStartTls="false" \

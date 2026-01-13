@@ -40,6 +40,7 @@ services:
   opensearch:
     image: opensearchproject/opensearch:${OPENSEARCH_VERSION:-latest}
     container_name: opensearch
+    restart: always
     environment:
       discovery.type: single-node
       node.name: opensearch
@@ -64,6 +65,7 @@ services:
   opensearch-dashboards:
     image: opensearchproject/opensearch-dashboards:${OPENSEARCH_UI_VERSION:-latest} 
     container_name: opensearch-dashboards
+    restart: always
     depends_on:
       - opensearch
     ports:
@@ -99,6 +101,7 @@ services:
   kafka:
     image: bitnamilegacy/kafka:${BITNAMI_KAFKA_VERSION:-latest}
     container_name: kafka
+    restart: always
     environment:
       KAFKA_ENABLE_KRAFT: yes
       KAFKA_HEAP_OPTS: -Djavax.net.debug=ssl
@@ -141,6 +144,7 @@ services:
   kafka-ui:
     image: provectuslabs/kafka-ui:${KAFKA_UI_VERSION:-latest}
     container_name: kafka-ui
+    restart: always
     depends_on:
       kafka:
         condition: service_healthy
@@ -178,7 +182,7 @@ services:
   mailpit:
     image: axllent/mailpit
     container_name: mailpit
-    restart: unless-stopped
+    restart: always
     volumes:
       - mailpit-data:/data
     ports:
