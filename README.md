@@ -19,8 +19,6 @@ To clear down the system and delete all persisted data:
 - Run `kube-reset-secrets.sh` to delete the namespace and re-create it with the basic set of required secrets
 - Run `prepull.sh` to extract the full list of required images from the helm chart and download them
 
-Follow the startup instructions to recreate the containers and secrets.
-
 ## Diagnostic tools
 There are a few support scripts that may help diagnose problems in the system
 - `list-secrets.sh` will query Kubernetes and list the secrets contained in the [semarchy-sdp] namespace. 
