@@ -15,9 +15,9 @@ First task:
 
 ## Cleardown/reset
 To clear down the system and delete all persisted data:
-- Run `docker compose down` to stop and delete the containers
-- Run `docker volume rm sdp-externals_postgres-data sdp-externals_kafka-data sdp-externals_mailpit-data sdp-externals_opensearch-data` to 
-delete all persisted data
+- Run `docker-reset.sh` to stop and delete the containers, and delete the related volumes to remove persisted data
+- Run `kube-reset-secrets.sh` to delete the namespace and re-create it with the basic set of required secrets
+- Run `prepull.sh` to extract the full list of required images from the helm chart and download them
 
 Follow the startup instructions to recreate the containers and secrets.
 
@@ -26,8 +26,8 @@ There are a few support scripts that may help diagnose problems in the system
 - `list-secrets.sh` will query Kubernetes and list the secrets contained in the [semarchy-sdp] namespace. 
 - `poddetails.sh` will create a folder structure containing logs and describe file for each pod running in Kubernetes. After running
 this script check for a folder called `pod_details_<yyyymmdd>_<hhmmss>`.
-- `smtp-test.sh` will send two test emails to the SMTP server. These should be visible in the UI at https://localhost:8025
+- `test/smtp-test.sh` will send two test emails to the SMTP server. These should be visible in the UI at https://localhost:8025
 - A basic Postgres web UI is at https://localhost:8090
 - A basic Kafka web UI is at https://localhost:8080 
 - OpenSearch dashboards are available at https://localhost:5601
-- A minikube/kubernetes daskboard can be started by executing `minikube dashboards`
+- A minikube/kubernetes dashboard can be started by executing `minikube dashboards`
