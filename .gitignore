@@ -2,6 +2,8 @@
 .env
 .env-harbor
 values.yaml
+values-beta*.yaml
+values-ga*.yaml
 
 steve*
 pod_details*
