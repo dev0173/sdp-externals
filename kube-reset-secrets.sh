@@ -104,7 +104,7 @@ kubectl create secret generic mail-secret \
     --from-literal=smtpStartTls="false" \
     --from-literal=smtpSsl="false" \
     --from-literal=smtpAuth="false" \
-    --from-literal=smtpPassword="" \
+    --from-literal=smtpPassword="not-required" \
     --namespace="${K8S_NAMESPACE}"
 
 # List the secrets
