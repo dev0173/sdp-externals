@@ -11,15 +11,10 @@ VALUES_FILE="${1:-values.yaml}"
 NAMESPACE="semarchy-sdp"
 
 # Check that the values file exists
-
 if [ ! -f "$VALUES_FILE" ]; then
   echo "Values file ($VALUES_FILE) not found!"
   exit 1
 fi
-
-# Point Docker CLI at minikube's Docker daemon
-echo "[*] Pointing Docker to minikube daemon..."
-eval "$(minikube docker-env)"
 
 # Render Helm templates locally
 echo "[*] Rendering Helm chart version $CHART_VERSION ..."
@@ -35,6 +30,10 @@ yq '.. | .image? | select(.)' /tmp/rendered.yaml | grep "^[^-]" | sort -u > /tmp
 
 echo "[*] Images to pull:"
 cat /tmp/images.txt
+
+# Point Docker CLI at minikube's Docker daemon
+echo "[*] Pointing Docker to minikube daemon..."
+eval "$(minikube docker-env)"
 
 # Pull each image into minikube's Docker daemon
 echo "[*] Pulling images into minikube..."
