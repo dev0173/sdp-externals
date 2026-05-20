@@ -5,10 +5,11 @@
 
 STARTTIME=$(date +%s)
 RELEASE_NAME="sdp"
-CHART_VERSION="1.0.0"
+CHART_VERSION="1.1.0"
 CHART_PATH="oci://registry.na.semarchy.net/semarchy-release/semarchy-data-platform"
 VALUES_FILE="${1:-values.yaml}"
 NAMESPACE="semarchy-sdp"
+PREFLIGHT=" --set global.prechecks.enabledPreflights=true"
 
 # Check that the values file exists
 if [ ! -f "$VALUES_FILE" ]; then
@@ -18,7 +19,9 @@ fi
 
 # Render Helm templates locally
 echo "[*] Rendering Helm chart version $CHART_VERSION ..."
-helm template "$RELEASE_NAME" "$CHART_PATH" --version "$CHART_VERSION" --values "$VALUES_FILE" > /tmp/rendered.yaml
+echo helm template "$RELEASE_NAME" "$CHART_PATH" --version "$CHART_VERSION" --values "$VALUES_FILE" $PREFLIGHT 
+exit 7
+helm template "$RELEASE_NAME" "$CHART_PATH" --version "$CHART_VERSION" --values "$VALUES_FILE" $PREFLIGHT > /tmp/rendered.yaml
 if [ $? -ne 0 ]; then 
   echo "helm command failed"; 
   exit 1

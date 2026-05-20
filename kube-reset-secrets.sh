@@ -95,6 +95,15 @@ kubectl create secret generic opensearch-provider \
     --from-literal=password="${OPENSEARCH_INTERNAL_USER_PASSWORD}" \
     --namespace="${K8S_NAMESPACE}"
 
+# Add OpenSearch billing secret (the preflight checks look for this, but it's not in the doco):
+kubectl create secret generic opensearch-billing-secret \
+    --from-literal=host="host.docker.internal" \
+    --from-literal=url="http://host.docker.internal:9200" \
+    --from-literal=port="9200" \
+    --from-literal=username="${OPENSEARCH_INTERNAL_USER}" \
+    --from-literal=password="${OPENSEARCH_INTERNAL_USER_PASSWORD}" \
+    --namespace="${K8S_NAMESPACE}"
+
 # Add SMTP connection secret:
 kubectl create secret generic mail-secret \
     --from-literal=smtpUser="sdp@sdp.selfhosted.com" \
